@@ -1,4 +1,4 @@
-# 🧠 Applied Activity 11 — From Text to Vector-Based Similarity
+# Applied Activity 11 — From Text to Vector-Based Similarity
 
 **Course:** Fundamentals of Artificial Intelligence (with Neural Networks and Transformers)  
 **Student:** Elián David Martínez Orozco  
