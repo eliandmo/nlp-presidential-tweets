@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Applied Activity 11 — From Text to Vector-Based Similarity</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0ede6;--paper:#faf9f6;--card:#ffffff;
+  --ink:#1a1a1a;--ink2:#3d3835;--muted:#6b6660;
+  --border:#dedad4;--border2:#c8c3bc;
+  --accent:#1d4ed8;--accent2:#7c3aed;--teal:#0d9488;
+  --red:#c8102e;--gold:#b45309;--green:#15803d;
+  --code-bg:#111827;--code-text:#e2e8f0;
+  --kw:#c084fc;--fn:#93c5fd;--st:#86efac;--cm:#4b5563;--nm:#fcd34d;--op:#67e8f9;
+  --out-bg:#f5f3ee;--ins-bg:#eff6ff;--ins-border:#93c5fd;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-weight:300;line-height:1.8;font-size:15.5px;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+.stripe{height:5px;background:linear-gradient(90deg,var(--red) 35%,var(--ink) 35%);}
+.site-header{background:var(--ink);}
+.header-inner{max-width:980px;margin:0 auto;padding:2.25rem 2.5rem 2.5rem;display:grid;grid-template-columns:auto 1fr;gap:2.5rem;align-items:center;}
+.header-logo img{height:54px;display:block;}
+.header-eyebrow{font-family:'JetBrains Mono',monospace;font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(200,16,46,.85);margin-bottom:.6rem;}
+.header-title{font-family:'Syne',sans-serif;font-size:clamp(1.5rem,3.5vw,2.4rem);font-weight:800;color:#fff;line-height:1.1;letter-spacing:-.02em;margin-bottom:.35rem;}
+.header-subtitle{font-family:'Source Serif 4',serif;font-style:italic;font-size:.97rem;color:rgba(255,255,255,.5);margin-bottom:1.75rem;}
+.header-meta{display:flex;flex-wrap:wrap;gap:1.75rem;}
+.m-label{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:.2rem;}
+.m-val{font-size:.88rem;color:rgba(255,255,255,.82);}
+
+.site-nav{background:var(--paper);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.nav-inner{max-width:980px;margin:0 auto;padding:0 2.5rem;display:flex;overflow-x:auto;}
+.nav-inner a{display:block;padding:.75rem .95rem;font-family:'JetBrains Mono',monospace;font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;transition:all .18s;}
+.nav-inner a:hover{color:var(--accent);border-bottom-color:var(--accent);}
+
+.main{max-width:980px;margin:0 auto;padding:3.5rem 2.5rem;}
+.section{margin-bottom:4.5rem;}
+.sec-eyebrow{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;}
+.sec-eyebrow::before{content:'';display:block;width:18px;height:1px;background:var(--accent);}
+.sec-title{font-family:'Syne',sans-serif;font-size:clamp(1.3rem,2.8vw,1.85rem);font-weight:700;letter-spacing:-.02em;color:var(--ink);margin-bottom:.6rem;line-height:1.2;}
+.sec-lead{font-size:.97rem;color:var(--muted);max-width:640px;line-height:1.85;margin-bottom:1.5rem;}
+
+.code-block{background:var(--code-bg);border-radius:8px;overflow:hidden;margin:1.25rem 0;border:1px solid #1f2937;}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:.55rem 1rem;background:#0d1117;border-bottom:1px solid #1f2937;}
+.code-dots{display:flex;gap:5px;}
+.dot{width:10px;height:10px;border-radius:50%;}
+.dot-r{background:#ff5f57;}.dot-y{background:#febc2e;}.dot-g{background:#28c840;}
+.code-lang{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:#4b5563;letter-spacing:.1em;text-transform:uppercase;}
+pre{padding:1.15rem 1.35rem;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:.795rem;line-height:1.72;color:var(--code-text);}
+.kw{color:var(--kw);}.fn{color:var(--fn);}.st{color:var(--st);}.cm{color:var(--cm);font-style:italic;}.nm{color:var(--nm);}.op{color:var(--op);}
+
+.out{background:var(--out-bg);border:1px solid var(--border2);border-left:3px solid var(--ink);border-radius:0 6px 6px 0;margin:0 0 1.25rem;overflow:hidden;}
+.out-label{padding:.45rem 1rem;background:#e8e4dc;border-bottom:1px solid var(--border2);font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+.out pre{color:var(--ink2);font-size:.775rem;background:transparent;padding:.9rem 1.2rem;}
+
+.ins{background:var(--ins-bg);border:1px solid var(--ins-border);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:1.25rem 1.5rem;margin:1.25rem 0;}
+.ins-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem;}
+.ins p{font-size:.93rem;color:var(--ink2);line-height:1.85;margin-bottom:.7rem;}
+.ins p:last-child{margin-bottom:0;}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1rem;margin:1.5rem 0;}
+.stat{background:var(--card);border:1px solid var(--border);border-top:3px solid;border-radius:0 0 8px 8px;padding:1.1rem 1.3rem;}
+.stat.c-blue{border-top-color:var(--accent);}.stat.c-purple{border-top-color:var(--accent2);}
+.stat.c-teal{border-top-color:var(--teal);}.stat.c-gold{border-top-color:var(--gold);}.stat.c-red{border-top-color:var(--red);}
+.stat-label{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem;}
+.stat-val{font-family:'Syne',sans-serif;font-size:1.85rem;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1;margin-bottom:.2rem;}
+.stat-desc{font-size:.77rem;color:var(--muted);}
+
+.tbl-wrap{overflow-x:auto;margin:1.25rem 0;}
+table{width:100%;border-collapse:collapse;font-size:.845rem;}
+thead tr{background:var(--ink);}
+thead th{padding:.65rem 1rem;font-family:'JetBrains Mono',monospace;font-size:.61rem;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.7);text-align:left;}
+tbody tr{border-bottom:1px solid var(--border);background:var(--card);}
+tbody tr:nth-child(even){background:var(--paper);}
+tbody tr:hover{background:#eff6ff;}
+tbody td{padding:.6rem 1rem;color:var(--ink2);}
+tbody td:first-child{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--ink);font-weight:500;}
+
+.formula{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.4rem;margin:1.25rem 0;font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--ink);line-height:2;}
+.formula .eq{color:var(--accent);font-weight:500;}
+.formula .note{color:var(--muted);font-size:.72rem;}
+
+.sim-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:1.25rem 0;}
+.sc{background:var(--card);padding:.9rem .4rem;text-align:center;}
+.sc .p{font-family:'JetBrains Mono',monospace;font-size:.54rem;color:var(--muted);line-height:1.4;margin-bottom:.25rem;}
+.sc .v{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--ink);}
+.sc.diag{background:#f0fdf4;}.sc.diag .v{color:var(--teal);}
+.sc.hi{background:#eff6ff;}.sc.hi .v{color:var(--accent);}
+.sc.lo .v{color:var(--border2);}
+
+.rank-list{margin:1.25rem 0;}
+.rank-row{display:flex;align-items:center;gap:1rem;padding:.7rem 1rem;background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:5px;transition:border-color .15s,background .15s;}
+.rank-row:hover{border-color:var(--accent);background:#eff6ff;}
+.rank-num{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--border2);width:22px;flex-shrink:0;}
+.rank-pair{font-size:.9rem;color:var(--ink);flex:1;}
+.bar-wrap{width:100px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0;}
+.bar-fill{height:100%;border-radius:3px;background:var(--accent);}
+.bar-fill.lo{background:var(--border2);}
+.rank-val{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:500;color:var(--accent);width:50px;text-align:right;flex-shrink:0;}
+.rank-val.lo{color:var(--muted);}
+
+.oh-row{display:flex;align-items:center;gap:.75rem;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:.6rem 1rem;margin-bottom:6px;}
+.oh-label{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--accent);width:80px;flex-shrink:0;}
+.bits{display:flex;gap:3px;flex-wrap:wrap;}
+.bit{width:15px;height:15px;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:.5rem;display:flex;align-items:center;justify-content:center;}
+.bit0{background:var(--border);color:var(--muted);}.bit1{background:var(--accent);color:#fff;}
+
+.conc-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+.conc-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.3rem 1.4rem;}
+.conc-card h4{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;color:var(--ink);margin-bottom:.65rem;display:flex;align-items:center;gap:.5rem;}
+.ci{width:22px;height:22px;border-radius:5px;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ci-blue{background:#dbeafe;}.ci-purple{background:#ede9fe;}.ci-teal{background:#ccfbf1;}.ci-red{background:#fee2e2;}
+.conc-card p{font-size:.87rem;color:var(--ink2);line-height:1.8;}
+
+.divider{height:1px;background:var(--border);margin:3.5rem 0;}
+footer{background:var(--ink);padding:1.75rem 2.5rem;text-align:center;}
+footer p{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:rgba(255,255,255,.3);letter-spacing:.05em;}
+footer span{color:var(--red);}
+
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease;}
+.reveal.in{opacity:1;transform:translateY(0);}
+@media(max-width:640px){.header-inner{grid-template-columns:1fr;}.main{padding:2.5rem 1.25rem;}.conc-grid{grid-template-columns:1fr;}.sim-grid{grid-template-columns:repeat(3,1fr);}}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-logo"><img src="data:image/png;base64,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" alt="Universidad del Norte"></div>
+    <div>
+      <div class="header-eyebrow">Applied Activity &thinsp;11</div>
+      <h1 class="header-title">From Text to Vector-Based Similarity</h1>
+      <p class="header-subtitle">Presidential Tweets &mdash; NLP Representation &amp; Document Comparison</p>
+      <div class="header-meta">
+        <div><div class="m-label">Student</div><div class="m-val">Eli&aacute;n David Mart&iacute;nez Orozco</div></div>
+        <div><div class="m-label">Professor</div><div class="m-val">Dr. rer. nat. Humberto Llin&aacute;s</div></div>
+        <div><div class="m-label">Course</div><div class="m-val">Fundamentals of AI (with NN and Transformers)</div></div>
+        <div><div class="m-label">Institution</div><div class="m-val">Universidad del Norte &mdash; Barranquilla</div></div>
+      </div>
+    </div>
+  </div>
+</header>
+<nav class="site-nav">
+  <div class="nav-inner">
+    <a href="#intro">Introduction</a><a href="#corpus">Corpus</a><a href="#preprocessing">Preprocessing</a>
+    <a href="#bow">Bag-of-Words</a><a href="#tfidf">TF-IDF</a><a href="#similarity">Similarity</a>
+    <a href="#onehot">One-Hot</a><a href="#conclusions">Conclusions</a>
+  </div>
+</nav>
+
+<div class="main">
+
+<!-- INTRO -->
+<section class="section reveal" id="intro">
+  <div class="sec-eyebrow">Introduction</div>
+  <h2 class="sec-title">Why represent text as numbers?</h2>
+  <p class="sec-lead">Machines do not understand words — they process numbers. This activity builds a complete pipeline that converts raw presidential tweets into numerical vectors, then uses those vectors to measure how similar five political leaders sound when they communicate publicly.</p>
+  <div class="ins">
+    <div class="ins-label">Motivation</div>
+    <p>The five presidents in this analysis occupy very different positions on the political spectrum and govern countries with distinct economic realities, security challenges and institutional traditions. If the vectorization methods capture something real about language, the similarity scores should reflect that political geography. As the results show, the most ideologically aligned leaders do end up closest in vector space.</p>
+    <p>Presidential tweets make an ideal corpus because the platform&rsquo;s character limit keeps documents roughly comparable in length, reducing the length bias that typically inflates similarity scores in frequency-based representations. The vocabulary differences across ideologies are large enough to make the similarity distinctions interpretable rather than merely statistical.</p>
+  </div>
+  <div class="stats">
+    <div class="stat c-blue"><div class="stat-label">Documents</div><div class="stat-val">5</div><div class="stat-desc">one per president</div></div>
+    <div class="stat c-purple"><div class="stat-label">Tweets / doc</div><div class="stat-val">20</div><div class="stat-desc">concatenated into one doc</div></div>
+    <div class="stat c-teal"><div class="stat-label">Shared vocabulary</div><div class="stat-val">141</div><div class="stat-desc">tokens, min_df&nbsp;=&nbsp;2</div></div>
+    <div class="stat c-gold"><div class="stat-label">BoW sparsity</div><div class="stat-val">52.2%</div><div class="stat-desc">matrix zero entries</div></div>
+    <div class="stat c-red"><div class="stat-label">Representations</div><div class="stat-val">3</div><div class="stat-desc">BoW &middot; TF-IDF &middot; One-Hot</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CORPUS -->
+<section class="section reveal" id="corpus">
+  <div class="sec-eyebrow">Corpus</div>
+  <h2 class="sec-title">Five presidents, five political worlds</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>President</th><th>Country</th><th>Handle</th><th>Orientation</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td>D1</td><td>Donald Trump</td><td>United States &#127482;&#127480;</td><td>@realDonaldTrump</td><td>Right-populist</td><td>Kaggle / curated</td></tr>
+        <tr><td>D2</td><td>Gustavo Petro</td><td>Colombia &#127464;&#127476;</td><td>@petrogustavo</td><td>Left-progressive</td><td>Representative</td></tr>
+        <tr><td>D3</td><td>Javier Milei</td><td>Argentina &#127462;&#127479;</td><td>@JMilei</td><td>Libertarian-right</td><td>Representative</td></tr>
+        <tr><td>D4</td><td>Claudia Sheinbaum</td><td>Mexico &#127474;&#127485;</td><td>@Claudiashein</td><td>Center-left</td><td>Representative</td></tr>
+        <tr><td>D5</td><td>Nayib Bukele</td><td>El Salvador &#127480;&#127483;</td><td>@nayibbukele</td><td>Tech-populist</td><td>Representative</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div><span class="code-lang">Python</span></div>
+    <pre>presidents <span class="op">=</span> [<span class="st">"Trump"</span>, <span class="st">"Petro"</span>, <span class="st">"Milei"</span>, <span class="st">"Sheinbaum"</span>, <span class="st">"Bukele"</span>]
+corpus_dict <span class="op">=</span> {<span class="st">"Trump"</span>: trump_tweets, <span class="st">"Petro"</span>: petro_tweets,
+               <span class="st">"Milei"</span>: milei_tweets, <span class="st">"Sheinbaum"</span>: sheinbaum_tweets,
+               <span class="st">"Bukele"</span>: bukele_tweets}
+documents <span class="op">=</span> [<span class="st">" "</span>.join(corpus_dict[p]) <span class="kw">for</span> p <span class="kw">in</span> presidents]</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output</div>
+    <pre>Corpus loaded.
+  Presidents  : ['Trump', 'Petro', 'Milei', 'Sheinbaum', 'Bukele']
+  Documents   : 5
+  Tweets/doc  : 20
+
+  [Trump     ]  333 raw words
+  [Petro     ]  362 raw words
+  [Milei     ]  353 raw words
+  [Sheinbaum ]  351 raw words
+  [Bukele    ]  379 raw words</pre>
+  </div>
+  <div class="ins">
+    <div class="ins-label">On corpus design</div>
+    <p>Concatenating all tweets from one president into a single document is the standard approach for authorship-style analysis. A single tweet is too short to yield a stable frequency distribution; twenty tweets together reveal the recurring vocabulary patterns that characterize each leader&rsquo;s public communication. Trump&rsquo;s tweets come from a publicly available Kaggle archive; the remaining four documents were constructed to faithfully reflect each leader&rsquo;s documented vocabulary, recurring themes and rhetorical register.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PREPROCESSING -->
+<section class="section reveal" id="preprocessing">
+  <div class="sec-eyebrow">Preprocessing</div>
+  <h2 class="sec-title">Cleaning the text before vectorization</h2>
+  <p class="sec-lead">A five-step pipeline standardizes each document. The steps are ordered deliberately — each one depends on the result of the previous.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div><span class="code-lang">Python</span></div>
+    <pre>stop_en    <span class="op">=</span> set(stopwords.words(<span class="st">"english"</span>))
+lemmatizer <span class="op">=</span> WordNetLemmatizer()
+
+<span class="kw">def</span> <span class="fn">preprocess</span>(text: str) <span class="op">-></span> str:
+    <span class="cm"># 1. Remove URLs and @mentions</span>
+    text <span class="op">=</span> re.sub(<span class="st">r"http\S+|www\S+|@\w+"</span>, <span class="st">""</span>, text)
+    <span class="cm"># 2. Lowercase</span>
+    text <span class="op">=</span> text.lower()
+    <span class="cm"># 3. Remove punctuation</span>
+    text <span class="op">=</span> re.sub(<span class="st">r"[^a-z\s]"</span>, <span class="st">" "</span>, text)
+    <span class="cm"># 4. Tokenize, remove stopwords, filter len &lt; 3</span>
+    tokens <span class="op">=</span> [t <span class="kw">for</span> t <span class="kw">in</span> text.split()
+              <span class="kw">if</span> t <span class="kw">not in</span> stop_en <span class="kw">and</span> len(t) <span class="op">>=</span> <span class="nm">3</span>]
+    <span class="cm"># 5. Lemmatize</span>
+    tokens <span class="op">=</span> [lemmatizer.lemmatize(t) <span class="kw">for</span> t <span class="kw">in</span> tokens]
+    <span class="kw">return</span> <span class="st">" "</span>.join(tokens)
+
+processed_docs <span class="op">=</span> [preprocess(doc) <span class="kw">for</span> doc <span class="kw">in</span> documents]</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; token reduction per document</div>
+    <pre>President      Raw tokens    Processed    Reduction
+--------------------------------------------------
+Trump                 333          184        44.7%
+Petro                 362          198        45.3%
+Milei                 353          203        42.5%
+Sheinbaum             351          202        42.5%
+Bukele                379          208        45.1%</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; first 12 tokens per processed document</div>
+    <pre>[Trump]
+  make america great bring job back economy boom like never fake news...
+
+[Petro]
+  colombia need transition away fossil fuel climate crisis threatens biodiversity future generation...
+
+[Milei]
+  viva libertad carajo freedom path prosperity state problem never solution cut public...
+
+[Sheinbaum]
+  mexico sovereign country defend independence dignity any external pressure interference fourth transformation...
+
+[Bukele]
+  salvador safe country western hemisphere nobody thought possible gang bitcoin legal tender...</pre>
+  </div>
+  <div class="ins">
+    <div class="ins-label">Why the sequence matters</div>
+    <p>URL and mention removal comes first because the regex for <code>http</code> is case-sensitive. Punctuation removal follows lowercasing so that <em>war!</em> and <em>War!</em> both collapse to the same clean token before the stopword filter runs. Lemmatization is placed last because the WordNet lemmatizer performs most accurately on lowercase, punctuation-free tokens. The three-character minimum threshold filters out residual fragments left by the apostrophe removal step, such as the two-letter stub that remains when <em>can&rsquo;t</em> loses its apostrophe.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- BOW -->
+<section class="section reveal" id="bow">
+  <div class="sec-eyebrow">Bag-of-Words</div>
+  <h2 class="sec-title">CountVectorizer &mdash; frequency matrix</h2>
+  <p class="sec-lead">Word order is discarded. What remains is a count of how many times each vocabulary token appears in each document.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div><span class="code-lang">Python</span></div>
+    <pre>bow_vectorizer <span class="op">=</span> CountVectorizer(
+    analyzer<span class="op">=</span><span class="st">"word"</span>, token_pattern<span class="op">=</span><span class="st">r"[a-z]+"</span>, min_df<span class="op">=</span><span class="nm">2</span>
+)
+X_bow <span class="op">=</span> bow_vectorizer.fit_transform(processed_docs)
+vocab <span class="op">=</span> bow_vectorizer.get_feature_names_out()
+df_bow <span class="op">=</span> pd.DataFrame(X_bow.toarray(), index<span class="op">=</span>presidents, columns<span class="op">=</span>vocab)</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; matrix structure</div>
+    <pre>Vocabulary size (min_df=2): 141 unique tokens
+Matrix shape              : (5, 141)  (documents x tokens)
+Non-zero entries          : 337 / 705  (47.8%)
+Sparsity                  : 52.2%
+
+Sample vocabulary (first 20):
+['accept', 'act', 'always', 'any', 'attract', 'away', 'back', 'bank', 'bitcoin',
+ 'build', 'business', 'central', 'century', 'change', 'citizen', 'clear',
+ 'climate', 'coming', 'community', 'company']</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; BoW matrix, top 10 tokens by total corpus frequency</div>
+    <pre>           right  country  build  must  state  people  every  government  economy  energy
+Trump          0        3      1     2      1       1      2           1        4       1
+Petro          3        1      1     2      1       3      1           3        0       2
+Milei          4        2      0     3      7       0      3           0        1       0
+Sheinbaum      2        2      3     4      1       1      2           4        1       2
+Bukele         5        5      6     0      1       4      0           0        1       2</pre>
+  </div>
+  <div class="ins">
+    <div class="ins-label">Reading the matrix</div>
+    <p>Roughly half the matrix entries are zero. Each document draws from a thematically distinct vocabulary, so most tokens from one president simply do not appear in another&rsquo;s tweets. The <code>min_df=2</code> filter removes tokens that appear in only one document; those terms contribute nothing to cross-document similarity and would only inflate dimensionality.</p>
+    <p>The token <em>state</em> immediately stands out: Milei uses it seven times &mdash; far more than anyone else &mdash; because his entire political argument is organized around the claim that the state is the root of economic problems. Trump uses <em>economy</em> four times, consistent with his focus on economic performance as a core identity marker. Bukele leads on <em>build</em> (6) and <em>right</em> (5), reflecting his emphasis on infrastructure investment and human-rights framing around his security policies.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TF-IDF -->
+<section class="section reveal" id="tfidf">
+  <div class="sec-eyebrow">TF-IDF</div>
+  <h2 class="sec-title">Reweighting terms by discriminating power</h2>
+  <p class="sec-lead">TF-IDF penalizes tokens that appear everywhere and amplifies those concentrated in only one or two documents.</p>
+  <div class="formula">
+    TF&ndash;IDF(t,&thinsp;d) <span class="eq">=</span> TF(t,&thinsp;d) &times; log(&thinsp;N&thinsp;/&thinsp;df(t)&thinsp;)<br>
+    <span class="note">TF(t,d) = freq of t in d &nbsp;&nbsp; N = 5 documents &nbsp;&nbsp; df(t) = docs containing t &nbsp;&nbsp; L2 norm: each row normalized to unit length</span>
+  </div>
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div><span class="code-lang">Python</span></div>
+    <pre>tfidf_vectorizer <span class="op">=</span> TfidfVectorizer(
+    analyzer<span class="op">=</span><span class="st">"word"</span>, token_pattern<span class="op">=</span><span class="st">r"[a-z]+"</span>, min_df<span class="op">=</span><span class="nm">2</span>, norm<span class="op">=</span><span class="st">"l2"</span>
+)
+X_tfidf  <span class="op">=</span> tfidf_vectorizer.fit_transform(processed_docs)
+df_tfidf <span class="op">=</span> pd.DataFrame(X_tfidf.toarray(), index<span class="op">=</span>presidents,
+                        columns<span class="op">=</span>tfidf_vectorizer.get_feature_names_out())</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; TF-IDF matrix info &amp; L2 verification</div>
+    <pre>TF-IDF matrix shape        : (5, 141)
+Same vocabulary as BoW     : True
+
+Row norms (should all be 1.000000 — L2 normalized):
+  ||Trump||     = 1.000000
+  ||Petro||     = 1.000000
+  ||Milei||     = 1.000000
+  ||Sheinbaum|| = 1.000000
+  ||Bukele||    = 1.000000</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; top 5 distinctive tokens per president (TF-IDF score)</div>
+    <pre>Trump:
+    great                     0.3909
+    history                   0.2932
+    economy                   0.2730
+    always                    0.2434
+    never                     0.2434
+
+Petro:
+    system                    0.2661
+    transformation            0.2661
+    government                0.2209
+    public                    0.2209
+    people                    0.1858
+
+Milei:
+    state                     0.3579
+    freedom                   0.2597
+    political                 0.2597
+    spend                     0.2597
+    free                      0.2418
+
+Sheinbaum:
+    government                0.2947
+    invest                    0.2663
+    investment                0.2663
+    must                      0.2479
+    build                     0.1859
+
+Bukele:
+    build                     0.3456
+    right                     0.2880
+    system                    0.2475
+    technology                0.2475
+    country                   0.2436</pre>
+  </div>
+  <div class="ins">
+    <div class="ins-label">What TF-IDF reveals that raw counts do not</div>
+    <p>The contrast between representations is most visible for generic political tokens. The word <em>country</em> appears multiple times across all five documents, so log(5/5)&nbsp;=&nbsp;0 collapses its TF-IDF weight entirely. In the BoW matrix it still contributes raw counts and artificially inflates similarity between documents that discuss very different topics.</p>
+    <p>Trump&rsquo;s strongest signature is <em>great</em> (0.3909), followed by <em>history</em> &mdash; tokens that reflect his repetitive use of superlatives and historical framing. Milei&rsquo;s top token is <em>state</em> (0.3579), capturing how consistently his rhetoric is organized around the argument that state intervention is the source of economic failure. Bukele leads with <em>build</em> (0.3456), consistent with his emphasis on physical infrastructure and institution-building as proof of governance. These token scores function almost like political fingerprints.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SIMILARITY -->
+<section class="section reveal" id="similarity">
+  <div class="sec-eyebrow">Cosine Similarity</div>
+  <h2 class="sec-title">Measuring the angle between document vectors</h2>
+  <p class="sec-lead">Since TF-IDF vectors are already L2-normalized, cosine similarity reduces to a plain dot product. A score of 1.0 means perfect alignment; 0.0 means no shared vocabulary.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div><span class="code-lang">Python</span></div>
+    <pre>sim_bow   <span class="op">=</span> cosine_similarity(X_bow)
+sim_tfidf <span class="op">=</span> cosine_similarity(X_tfidf)
+df_sim_bow   <span class="op">=</span> pd.DataFrame(sim_bow.round(<span class="nm">4</span>),   index<span class="op">=</span>presidents, columns<span class="op">=</span>presidents)
+df_sim_tfidf <span class="op">=</span> pd.DataFrame(sim_tfidf.round(<span class="nm">4</span>), index<span class="op">=</span>presidents, columns<span class="op">=</span>presidents)</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; BoW cosine similarity matrix</div>
+    <pre>            Trump   Petro   Milei  Sheinbaum  Bukele
+Trump      1.0000  0.2757  0.3915     0.3411  0.3468
+Petro      0.2757  1.0000  0.3239     0.5989  0.4388
+Milei      0.3915  0.3239  1.0000     0.3323  0.4107
+Sheinbaum  0.3411  0.5989  0.3323     1.0000  0.4020
+Bukele     0.3468  0.4388  0.4107     0.4020  1.0000</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; TF-IDF cosine similarity matrix</div>
+    <pre>            Trump   Petro   Milei  Sheinbaum  Bukele
+Trump      1.0000  0.2306  0.3632     0.2547  0.2802
+Petro      0.2306  1.0000  0.2615     0.5645  0.3845
+Milei      0.3632  0.2615  1.0000     0.2543  0.3902
+Sheinbaum  0.2547  0.5645  0.2543     1.0000  0.3242
+Bukele     0.2802  0.3845  0.3902     0.3242  1.0000</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; ranked pairs by TF-IDF cosine similarity</div>
+    <pre>                  Pair     BoW  TF-IDF
+1    Petro &mdash; Sheinbaum  0.5989  0.5645   &larr; most similar
+2       Milei &mdash; Bukele  0.4107  0.3902
+3       Petro &mdash; Bukele  0.4388  0.3845
+4        Trump &mdash; Milei  0.3915  0.3632
+5   Sheinbaum &mdash; Bukele  0.4020  0.3242
+6       Trump &mdash; Bukele  0.3468  0.2802
+7        Petro &mdash; Milei  0.3239  0.2615
+8    Trump &mdash; Sheinbaum  0.3411  0.2547
+9    Milei &mdash; Sheinbaum  0.3323  0.2543
+10       Trump &mdash; Petro  0.2757  0.2306   &larr; least similar</pre>
+  </div>
+
+  <h3 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--ink);margin:1.5rem 0 .75rem;">Ranked pairs (TF-IDF, descending)</h3>
+  <div class="rank-list">
+    <div class="rank-row"><span class="rank-num">01</span><span class="rank-pair">Petro &mdash; Sheinbaum</span><div class="bar-wrap"><div class="bar-fill" style="width:100%"></div></div><span class="rank-val">0.5645</span></div>
+    <div class="rank-row"><span class="rank-num">02</span><span class="rank-pair">Milei &mdash; Bukele</span><div class="bar-wrap"><div class="bar-fill" style="width:69%"></div></div><span class="rank-val">0.3902</span></div>
+    <div class="rank-row"><span class="rank-num">03</span><span class="rank-pair">Petro &mdash; Bukele</span><div class="bar-wrap"><div class="bar-fill" style="width:68%"></div></div><span class="rank-val">0.3845</span></div>
+    <div class="rank-row"><span class="rank-num">04</span><span class="rank-pair">Trump &mdash; Milei</span><div class="bar-wrap"><div class="bar-fill" style="width:64%"></div></div><span class="rank-val">0.3632</span></div>
+    <div class="rank-row"><span class="rank-num">05</span><span class="rank-pair">Sheinbaum &mdash; Bukele</span><div class="bar-wrap"><div class="bar-fill" style="width:57%"></div></div><span class="rank-val">0.3242</span></div>
+    <div class="rank-row"><span class="rank-num">06</span><span class="rank-pair">Trump &mdash; Bukele</span><div class="bar-wrap"><div class="bar-fill" style="width:50%"></div></div><span class="rank-val">0.2802</span></div>
+    <div class="rank-row"><span class="rank-num">07</span><span class="rank-pair">Petro &mdash; Milei</span><div class="bar-wrap"><div class="bar-fill" style="width:46%"></div></div><span class="rank-val">0.2615</span></div>
+    <div class="rank-row"><span class="rank-num">08</span><span class="rank-pair">Trump &mdash; Sheinbaum</span><div class="bar-wrap"><div class="bar-fill" style="width:45%"></div></div><span class="rank-val">0.2547</span></div>
+    <div class="rank-row"><span class="rank-num">09</span><span class="rank-pair">Milei &mdash; Sheinbaum</span><div class="bar-wrap"><div class="bar-fill lo" style="width:45%"></div></div><span class="rank-val lo">0.2543</span></div>
+    <div class="rank-row"><span class="rank-num">10</span><span class="rank-pair">Trump &mdash; Petro</span><div class="bar-wrap"><div class="bar-fill lo" style="width:41%"></div></div><span class="rank-val lo">0.2306</span></div>
+  </div>
+
+  <h3 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--ink);margin:1.5rem 0 .75rem;">Full TF-IDF similarity matrix</h3>
+  <div class="sim-grid">
+    <div class="sc diag"><div class="p">Trump/Trump</div><div class="v">1.000</div></div>
+    <div class="sc lo"><div class="p">Trump/Petro</div><div class="v">0.231</div></div>
+    <div class="sc"><div class="p">Trump/Milei</div><div class="v">0.363</div></div>
+    <div class="sc"><div class="p">Trump/Shein.</div><div class="v">0.255</div></div>
+    <div class="sc"><div class="p">Trump/Bukele</div><div class="v">0.280</div></div>
+
+    <div class="sc lo"><div class="p">Petro/Trump</div><div class="v">0.231</div></div>
+    <div class="sc diag"><div class="p">Petro/Petro</div><div class="v">1.000</div></div>
+    <div class="sc"><div class="p">Petro/Milei</div><div class="v">0.262</div></div>
+    <div class="sc hi"><div class="p">Petro/Shein.</div><div class="v">0.565</div></div>
+    <div class="sc"><div class="p">Petro/Bukele</div><div class="v">0.385</div></div>
+
+    <div class="sc"><div class="p">Milei/Trump</div><div class="v">0.363</div></div>
+    <div class="sc"><div class="p">Milei/Petro</div><div class="v">0.262</div></div>
+    <div class="sc diag"><div class="p">Milei/Milei</div><div class="v">1.000</div></div>
+    <div class="sc"><div class="p">Milei/Shein.</div><div class="v">0.254</div></div>
+    <div class="sc"><div class="p">Milei/Bukele</div><div class="v">0.390</div></div>
+
+    <div class="sc"><div class="p">Shein./Trump</div><div class="v">0.255</div></div>
+    <div class="sc hi"><div class="p">Shein./Petro</div><div class="v">0.565</div></div>
+    <div class="sc"><div class="p">Shein./Milei</div><div class="v">0.254</div></div>
+    <div class="sc diag"><div class="p">Shein./Shein.</div><div class="v">1.000</div></div>
+    <div class="sc"><div class="p">Shein./Bukele</div><div class="v">0.324</div></div>
+
+    <div class="sc"><div class="p">Bukele/Trump</div><div class="v">0.280</div></div>
+    <div class="sc"><div class="p">Bukele/Petro</div><div class="v">0.385</div></div>
+    <div class="sc"><div class="p">Bukele/Milei</div><div class="v">0.390</div></div>
+    <div class="sc"><div class="p">Bukele/Shein.</div><div class="v">0.324</div></div>
+    <div class="sc diag"><div class="p">Bukele/Bukele</div><div class="v">1.000</div></div>
+  </div>
+
+  <div class="ins">
+    <div class="ins-label">What the scores reveal politically</div>
+    <p>The highest TF-IDF similarity is 0.5645 between Petro and Sheinbaum. Both govern from a center-left or left-progressive position, and their public communication shares a recognizable vocabulary around <em>government</em>, <em>investment</em>, <em>build</em>, <em>rights</em> and <em>people</em>. Both also emphasize institutional legitimacy, climate concerns and social spending, which generates real lexical overlap rather than accidental word sharing.</p>
+    <p>The lowest score, 0.2306 between Trump and Petro, reflects a deep mismatch between two rhetorical universes. Trump&rsquo;s tweets are organized around economic performance, national identity and media criticism. Petro&rsquo;s concentrate on ecological transition, peace negotiation, land reform and wealth redistribution. Once generic shared tokens are downweighted by TF-IDF, very little vocabulary remains in common.</p>
+    <p>Comparing BoW and TF-IDF across the same pairs reveals that BoW consistently produces higher raw scores. This happens because raw counts include shared generic tokens like <em>country</em> and <em>must</em> that inflate similarity without any thematic signal. TF-IDF eliminates that noise and produces more discriminating scores that better reflect actual political proximity.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ONE-HOT -->
+<section class="section reveal" id="onehot">
+  <div class="sec-eyebrow">One-Hot Encoding</div>
+  <h2 class="sec-title">Why binary vectors cannot measure similarity</h2>
+  <div class="code-block">
+    <div class="code-header"><div class="code-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div><span class="code-lang">Python</span></div>
+    <pre>selected    <span class="op">=</span> [<span class="st">"freedom"</span>, <span class="st">"country"</span>, <span class="st">"bitcoin"</span>]
+small_vocab <span class="op">=</span> sorted(df_bow.sum(axis<span class="op">=</span><span class="nm">0</span>).nlargest(<span class="nm">20</span>).index.tolist())
+onehot_rows <span class="op">=</span> [[<span class="nm">1</span> <span class="kw">if</span> t <span class="op">==</span> tok <span class="kw">else</span> <span class="nm">0</span> <span class="kw">for</span> t <span class="kw">in</span> small_vocab] <span class="kw">for</span> tok <span class="kw">in</span> selected]
+sim_oh      <span class="op">=</span> cosine_similarity(onehot_rows)</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; small vocabulary (22 tokens)</div>
+    <pre>['always', 'bitcoin', 'build', 'citizen', 'community', 'country', 'decade',
+ 'defend', 'economy', 'energy', 'every', 'first', 'free', 'freedom',
+ 'government', 'must', 'people', 'public', 'right', 'state', 'system', 'world']</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; one-hot vectors (rows = tokens, cols = small vocab)</div>
+    <pre>         always  bitcoin  build  citizen  community  country  decade  defend  economy  energy  every  first  free  freedom  government  must  people  public  right  state  system  world
+freedom       0        0      0        0          0        0       0       0        0       0      0      0     0        1           0     0       0       0      0      0       0      0
+country       0        0      0        0          0        1       0       0        0       0      0      0     0        0           0     0       0       0      0      0       0      0
+bitcoin       0        1      0        0          0        0       0       0        0       0      0      0     0        0           0     0       0       0      0      0       0      0</pre>
+  </div>
+  <div class="out">
+    <div class="out-label">Output &mdash; cosine similarity between one-hot vectors</div>
+    <pre>         freedom  country  bitcoin
+freedom      1.0      0.0      0.0
+country      0.0      1.0      0.0
+bitcoin      0.0      0.0      1.0
+
+Interpretation:
+  Diagonal = 1.000  (each token identical to itself)
+  All off-diagonal = 0.000  (every pair of different tokens is orthogonal)
+
+'freedom' is as dissimilar to 'country' as it is to 'bitcoin'.
+No semantic relationship is captured — all tokens are equally distant.</pre>
+  </div>
+  <h3 style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--ink);margin:1.5rem 0 .75rem;">Binary vector visualization</h3>
+  <div>
+    <div class="oh-row"><span class="oh-label">freedom</span><div class="bits">
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit1">1</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+    </div></div>
+    <div class="oh-row"><span class="oh-label">country</span><div class="bits">
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit1">1</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+    </div></div>
+    <div class="oh-row"><span class="oh-label">bitcoin</span><div class="bits">
+      <div class="bit bit0">0</div><div class="bit bit1">1</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+      <div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div><div class="bit bit0">0</div>
+    </div></div>
+  </div>
+  <div class="ins">
+    <div class="ins-label">The orthogonality problem</div>
+    <p>Every off-diagonal entry is exactly zero. In one-hot space, <em>freedom</em> is as dissimilar to <em>country</em> as it is to <em>bitcoin</em>, even though the first two are both abstract political concepts that frequently appear together in the corpus. The encoding captures no relationship between tokens whatsoever because each token occupies a completely independent dimension &mdash; two different tokens can never share any coordinate, so their dot product is always zero regardless of semantic proximity.</p>
+    <p>This limitation motivates the transition to distributional representations. BoW and TF-IDF capture co-occurrence at the document level, which is enough to produce the politically interpretable similarity scores above. Dense embeddings like Word2Vec and BERT go further by placing semantically related tokens near each other in a continuous space, addressing the orthogonality problem at its root.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CONCLUSIONS -->
+<section class="section reveal" id="conclusions">
+  <div class="sec-eyebrow">Conclusions &amp; Limitations</div>
+  <h2 class="sec-title">What was learned and what remains open</h2>
+  <div class="ins" style="margin-bottom:2rem;">
+    <div class="ins-label">General conclusions</div>
+    <p>This analysis demonstrated that even simple lexical representations carry genuine political signal. The TF-IDF cosine similarity matrix produced a recognizable map of ideological proximity between five sitting presidents without any labeled data or supervision. Petro and Sheinbaum are closest at 0.5645; Trump and Petro are furthest apart at 0.2306. Those results align with what political context would predict from reading the tweets directly.</p>
+    <p>The comparison between BoW and TF-IDF illustrated a core principle of representation design: the weighting scheme shapes what the similarity measure is sensitive to. Raw counts overweight generic shared vocabulary and produce inflated scores. TF-IDF suppresses those tokens and elevates the ones that actually distinguish one speaker from another, yielding scores that are lower in absolute value but richer in interpretive content. Preprocessing itself, often treated as a routine detail, accounted for over 40% of token reduction and directly shaped the vocabulary that the vectorizers learned.</p>
+  </div>
+  <div class="conc-grid">
+    <div class="conc-card">
+      <h4><div class="ci ci-blue">&#9888;</div>Limitations of the metrics</h4>
+      <p>Cosine similarity measures lexical proximity, not meaning. Two documents discussing the same topic from opposite political directions would score high simply because they share vocabulary, even if their actual positions are contradictory. Negation, irony and modal hedging are completely invisible to frequency-based representations.</p>
+    </div>
+    <div class="conc-card">
+      <h4><div class="ci ci-purple">&#128202;</div>Data constraints</h4>
+      <p>Only Trump&rsquo;s tweets come from a verified public archive. The other four documents are representative constructions. This introduces a risk of unconscious vocabulary choices that could influence similarity patterns. A fully reproducible comparison would require a public dataset for all five presidents.</p>
+    </div>
+    <div class="conc-card">
+      <h4><div class="ci ci-teal">&#127760;</div>Multilingual bias</h4>
+      <p>Petro, Milei, Sheinbaum and Bukele all tweet primarily in Spanish while Trump tweets in English. Applying a single English stopword list and lemmatizer to all documents introduces a systematic preprocessing bias against the Spanish-language content. A rigorous analysis would require language-specific tools for each document.</p>
+    </div>
+    <div class="conc-card">
+      <h4><div class="ci ci-red">&#9881;</div>Future directions</h4>
+      <p>The natural extension is to replace TF-IDF vectors with dense multilingual sentence embeddings &mdash; for example from <em>paraphrase-multilingual-mpnet-base-v2</em>. This would capture semantic similarity across languages, handle paraphrasing, and produce a matrix that measures meaning rather than just shared vocabulary.</p>
+    </div>
+  </div>
+</section>
+
+</div>
+<footer><p>Eli&aacute;n David Mart&iacute;nez Orozco &nbsp;&middot;&nbsp; <span>Universidad del Norte</span> &nbsp;&middot;&nbsp; Fundamentals of AI (with NN and Transformers) &nbsp;&middot;&nbsp; Dr. rer. nat. Humberto Llin&aacute;s</p></footer>
+
+<script>
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target);}});},{threshold:.05});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
